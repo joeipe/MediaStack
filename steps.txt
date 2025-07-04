@@ -1,0 +1,284 @@
+# Summary of what each service does
+
+🚀 Torrent & Indexers
+- qBittorrent (8080) – Torrent client for downloading files via peer-to-peer (P2P). This is the actual downloader.
+- Prowlarr (9696) – Indexer manager that connects to torrent and Usenet indexers. It feeds links to apps like Sonarr/Radarr.
+
+🎬 Media Managers
+- Sonarr (8989) – Automatically searches, downloads, and manages TV shows.
+- Radarr (7878) – Same as Sonarr but for movies.
+- Lidarr (8686) – Manages music downloads.
+- Readarr (8787) – Manages eBooks and audiobooks.
+- Bazarr (6767) – Finds and manages subtitles for movies and TV shows.
+
+🎥 Media Servers
+- Jellyfin (8096) – Media server to organize, stream, and watch your media (open source, alternative to Plex).
+- Plex (32400) – Popular media server that lets you stream your movies, TV, music, and photos to devices.
+
+
+
+
+# Docker commands
+
+docker-compose up
+- Starts the containers defined in your docker-compose.yml file. If they don’t exist, it builds and creates them.
+
+docker-compose down
+- Stops and removes the containers, networks, and volumes created by docker-compose up.
+
+
+
+# Folder structure to create:
+
+/your-project-folder/
+ ├── docker-compose.yml
+ ├── .env
+ ├── gluetun/
+ ├── qbittorrent/
+ │    ├── config/
+ │    └── downloads/
+ ├── sonarr/
+ │    ├── config/
+ │    └── tv/
+ ├── radarr/
+ │    ├── config/
+ │    └── movies/
+ ├── prowlarr/
+ │    └── config/
+ ├── lidarr/
+ │    ├── config/
+ │    └── music/
+ ├── readarr/
+ │    ├── config/
+ │    └── books/
+ ├── bazarr/
+ │    └── config/
+ ├── jellyfin/
+ │    ├── config/
+ │    └── cache/
+ └── plex/
+      └── config/
+
+
+
+
+# Fill in your .env file
+
+NORDVPN_USER=your_nordvpn_username
+NORDVPN_PASSWORD=your_nordvpn_password
+VPN_COUNTRY=Australia
+
+You can get your_nordvpn_username and your_nordvpn_password
+from NordVPN -> Manual Setup -> Service credentials (Verification needed).
+
+
+
+
+# First-time setup guide
+
+1️⃣ qBittorrent
+Access:
+http://your-ip:8080
+
+Login:
+- Use the username/password you set (e.g. admin / adminadmin)
+- To set the default password manually, add the following line under [Preferences] in the config file:
+	WebUI\Password_PBKDF2="@ByteArray(ARQ77eY1NUZaQsuDHbIMCA==:0WMRkYTUWVT9wVvdDtHAjU9b3b7uB8NR1Gur2hmQCvCDpm39Q+PsJRJPaCU51dEiz+dTzh8qbPsL8WkFljQYFQ==)"
+
+Set:
+- Default download dir → /downloads
+
+---
+
+2️⃣ Sonarr
+Access:
+http://your-ip:8989
+
+First-time steps:
+- Go to Settings → Download Clients → + Add New → qBittorrent
+  Host: gluetun
+  Port: 8080
+  Username/Password: (your qBittorrent login)
+  Test → Save
+
+- Go to Settings → Media Management
+  Set Root Folder: /tv
+
+- Go to Series → Add New
+  Add a show
+  Set path: /tv
+
+Connect to Prowlarr:
+- In Prowlarr:
+  Go to Settings → Applications → + Add → Sonarr
+  URL: http://gluetun:8989
+  API Key: (from Sonarr → Settings → General → Security → API Key)
+  Save
+
+Prowlarr will push indexers to Sonarr automatically.
+
+---
+
+3️⃣ Radarr
+Access:
+http://your-ip:7878
+
+First-time steps:
+- Go to Settings → Download Clients → + Add → qBittorrent
+  (same as Sonarr — gluetun:8080, your login)
+
+- Go to Settings → Media Management → Root Folder → /movies
+
+- Add movies → set path /movies
+
+- Connect to Prowlarr (same as with Sonarr)
+
+---
+
+4️⃣ Lidarr
+Access:
+http://your-ip:8686
+
+First-time steps:
+- Go to Settings → Download Clients → + Add → qBittorrent
+  (gluetun:8080, your login)
+
+- Go to Media Management → Root Folder → /music
+
+- Add artist → set path /music
+
+- Connect to Prowlarr (same as with Sonarr)
+
+---
+
+5️⃣ Prowlarr
+Access:
+http://your-ip:9696
+
+First-time steps:
+- Go to Indexers → + Add Indexer
+  Add public or private trackers
+  Enter API keys / URLs as needed
+
+- Go to Settings → Applications → + Add
+  Add Sonarr, Radarr, Lidarr
+  URL: http://gluetun:<port>
+  API key from each app
+
+Prowlarr will now push indexers to all apps.
+
+---
+
+6️⃣ Bazarr
+Access:
+http://your-ip:6767
+
+First-time steps:
+- Go to Settings → Sonarr → connect
+- Go to Settings → Radarr → connect
+- Set subtitle languages
+- Set download path if needed
+
+---
+
+7️⃣ Jellyfin
+Access:
+http://your-ip:8096
+
+First-time steps:
+- Create admin account
+- Add libraries:
+  Type: TV Shows → /tv
+  Type: Movies → /movies
+  Type: Music → /music
+- Set metadata providers / options
+
+---
+
+8️⃣ Plex
+Access:
+http://your-ip:32400/web
+
+First-time steps:
+- Sign in with your Plex account
+- Add libraries:
+  Type: TV → /tv
+  Type: Movies → /movies
+  Type: Music → /music
+- Set up agents, metadata, etc
+- ⚠ Plex may struggle with remote access behind VPN — consider running outside VPN if you need remote streaming
+
+
+
+
+
+# 🚀 Bazarr setup: clean step-by-step
+
+1️⃣ Access Bazarr
+Open your browser:
+http://your-ip:6767
+- First time: no username/password (unless you set one)
+
+---
+
+2️⃣ Link Bazarr to Sonarr and Radarr
+
+Settings → Sonarr → + Add
+- URL: http://gluetun:8989
+- API Key: Get this from Sonarr (Settings → General → Security → API Key)
+- Test → Save
+
+Settings → Radarr → + Add
+- URL: http://gluetun:7878
+- API Key: Get this from Radarr (Settings → General → Security → API Key)
+- Test → Save
+
+Bazarr can now see what Sonarr and Radarr are managing!
+
+---
+
+3️⃣ Set your subtitle languages
+
+Settings → Languages
+- Choose the languages you want to auto-download (e.g. English, Spanish)
+- Set which types: Series, Movies
+
+---
+
+4️⃣ Configure subtitle providers
+
+Settings → Providers
+- Add providers like:
+  OpenSubtitles (need a free account → enter username/password)
+  Addic7ed
+  Subscene
+  Podnapisi
+  Any others you like
+- Test → Save
+
+---
+
+5️⃣ Configure paths (if needed)
+
+- Usually Bazarr inherits paths from Sonarr / Radarr, so no need to set them.
+- If you want: Settings → Paths
+  Confirm your /tv, /movies paths match Sonarr / Radarr
+
+---
+
+6️⃣ Enable automatic downloading
+
+Settings → General
+- Enable:
+  Search and download subtitles automatically
+  Update on import
+  Remove after import (if you want to clean up temp subs)
+
+---
+
+7️⃣ Test it
+
+- Let Bazarr run
+- Or manually trigger:
+  Series → Actions → Search missing subtitles
+  Movies → Actions → Search missing subtitles

@@ -23,6 +23,18 @@ Application Permissions for photousers group:
 
 ------------------------------------------------------------------
 
+Folder Structure
+----------------
+/volume1/photos/
+├── joe/
+│   └── mobile-backup/
+├── amy/
+│   └── mobile-backup/
+
+Each user's iPhone will back up photos into their respective subfolder.
+
+------------------------------------------------------------------
+
 Step 1: Disable Personal Space (Optional but Recommended)
 ----------------------------------------------------------
 Only do this if you want to force backups into shared folders and avoid /home/Photos.
@@ -58,11 +70,14 @@ Step 3: Set Up Synology Photos App on iPhone
 6. Browse to: Photos\joe
 7. Confirm destination ✔
 
+(Repeat same steps for Amy using her own Synology Photos app and folder)
+
 ------------------------------------------------------------------
 
 Result:
 -------
-All photos will now back up to:
+All iPhone photos will now back up to:
 \\[YOUR_NAS_ADDRESS]\Photos\joe\mobile-backup
+\\[YOUR_NAS_ADDRESS]\Photos\amy\mobile-backup
 
 /home/Photos is no longer used if Personal Space is disabled.

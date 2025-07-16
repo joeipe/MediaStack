@@ -1,0 +1,68 @@
+Synology NAS – iPhone Photo Backup to Shared Folder (Photos\joe)
+==================================================================
+
+Goal:
+-----
+Back up Joe's iPhone photos to \\[YOUR_NAS_ADDRESS]\Photos\joe using Synology Photos Shared Space
+
+------------------------------------------------------------------
+
+User & Group Setup
+------------------
+- Created users: joe, amy
+- Created group: photousers
+- Added joe and amy to photousers group
+
+Shared Folder Permissions:
+- Folder: Photos
+- Group: photousers → Read/Write access
+
+Application Permissions for photousers group:
+- File Station → Allowed
+- Synology Photos → Allowed
+
+------------------------------------------------------------------
+
+Step 1: Disable Personal Space (Optional but Recommended)
+----------------------------------------------------------
+Only do this if you want to force backups into shared folders and avoid /home/Photos.
+
+1. Go to Control Panel → User & Group
+2. Click the "Advanced" tab
+3. Uncheck "Enable user home service"
+4. Click "Apply"
+
+⚠ Warning: Disabling this removes home folders like /home/Photos, /home/Drive for ALL users.
+
+------------------------------------------------------------------
+
+Step 2: Enable Shared Space in Synology Photos
+----------------------------------------------
+1. Log into DSM as admin
+2. Open Synology Photos
+3. Click the gear icon (Settings) in the top-right
+4. Go to "Shared Space"
+5. Check "Enable Shared Space" ✔
+
+------------------------------------------------------------------
+
+Step 3: Set Up Synology Photos App on iPhone
+--------------------------------------------
+1. Install Synology Photos from the App Store
+2. Log in with:
+   - NAS address: [YOUR_NAS_ADDRESS]
+   - Username: joe
+3. Go to Account (bottom right) → Photo Backup
+4. Tap "Backup Destination"
+5. Select "Custom Location"
+6. Browse to: Photos\joe
+7. Confirm destination ✔
+
+------------------------------------------------------------------
+
+Result:
+-------
+All photos will now back up to:
+\\[YOUR_NAS_ADDRESS]\Photos\joe\mobile-backup
+
+/home/Photos is no longer used if Personal Space is disabled.

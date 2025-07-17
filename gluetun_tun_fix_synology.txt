@@ -1,0 +1,53 @@
+=== Fix Gluetun VPN Error: /dev/net/tun Missing on Synology ===
+
+Error:
+  error gathering device information while adding custom device "/dev/net/tun": no such file or directory
+
+Root Cause:
+  The TUN device (/dev/net/tun) is missing. Synology DSM does not include it by default.
+  This device is required for Gluetun (VPN container) to work.
+
+---------------------------------------------------------
+STEP 1: Enable SSH in Synology DSM
+---------------------------------------------------------
+1. DSM → Control Panel → Terminal & SNMP
+2. Tick "Enable SSH service"
+3. Save
+
+---------------------------------------------------------
+STEP 2: SSH into Synology NAS from Windows
+---------------------------------------------------------
+1. Open PowerShell or Command Prompt
+2. Connect via:
+   ssh your_admin_user@YOUR_NAS_IP
+
+   Example:
+   ssh joe@192.168.1.100
+
+3. Enter your DSM password when prompted
+
+---------------------------------------------------------
+STEP 3: Create the TUN device manually
+---------------------------------------------------------
+Run the following commands (one line at a time):
+
+sudo mkdir -p /dev/net
+sudo mknod /dev/net/tun c 10 200
+sudo chmod 600 /dev/net/tun
+
+✅ This enables /dev/net/tun temporarily.
+
+---------------------------------------------------------
+STEP 4 (Optional): Make it Persistent After Reboot
+---------------------------------------------------------
+1. DSM → Control Panel → Task Scheduler
+2. Create a "Triggered Task" → "Boot-up"
+3. Set user to: root
+4. Add the following command:
+
+mkdir -p /dev/net && mknod /dev/net/tun c 10 200 && chmod 600 /dev/net/tun
+
+✅ This re-creates /dev/net/tun at every boot.
+
+---------------------------------------------------------
+Done! Restart the Gluetun container and it should now work.

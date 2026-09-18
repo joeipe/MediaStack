@@ -1,0 +1,190 @@
+version: "3.8"
+
+services:
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun
+    ports:
+      - 8080:8080       # qBittorrent
+      - 6881:6881       # qBittorrent TCP
+      - 6881:6881/udp   # qBittorrent UDP
+      - 8989:8989       # Sonarr
+      - 7878:7878       # Radarr
+      - 9696:9696       # Prowlarr
+      - 8686:8686       # Lidarr
+      - 8787:8787       # Readarr
+      - 6767:6767       # Bazarr
+      - 8096:8096       # Jellyfin
+      - 32400:32400     # Plex
+    environment:
+      - VPN_SERVICE_PROVIDER=nordvpn
+      - OPENVPN_USER=${NORDVPN_USER}
+      - OPENVPN_PASSWORD=${NORDVPN_PASSWORD}
+      - SERVER_COUNTRIES=${VPN_COUNTRY}
+    volumes:
+      - ./gluetun:/gluetun
+    restart: unless-stopped
+    healthcheck:
+      test: /gluetun-entrypoint healthcheck
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  qbittorrent:
+    image: linuxserver/qbittorrent
+    container_name: qbittorrent
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Australia/Sydney
+      - WEBUI_PORT=8080
+    volumes:
+      - ./qbittorrent/config:/config
+      - ./qbittorrent/downloads:/downloads
+    restart: unless-stopped
+
+  sonarr:
+    image: linuxserver/sonarr
+    container_name: sonarr
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Australia/Sydney
+    volumes:
+      - ./sonarr/config:/config
+      - ./sonarr/tv:/tv
+      - ./qbittorrent/downloads:/downloads
+    restart: unless-stopped
+
+  radarr:
+    image: linuxserver/radarr
+    container_name: radarr
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Australia/Sydney
+    volumes:
+      - ./radarr/config:/config
+      - ./radarr/movies:/movies
+      - ./qbittorrent/downloads:/downloads
+    restart: unless-stopped
+    
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr
+    container_name: prowlarr
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Australia/Sydney
+    volumes:
+      - ./prowlarr/config:/config
+    restart: unless-stopped
+
+  lidarr:
+    image: linuxserver/lidarr
+    container_name: lidarr
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Australia/Sydney
+    volumes:
+      - ./lidarr/config:/config
+      - ./lidarr/music:/music
+      - ./qbittorrent/downloads:/downloads
+    restart: unless-stopped
+    
+  readarr:
+    image: hotio/readarr:nightly
+    container_name: readarr
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Australia/Sydney
+    volumes:
+      - ./readarr/config:/config
+      - ./readarr/books:/books
+      - ./qbittorrent/downloads:/downloads
+    restart: unless-stopped
+
+  bazarr:
+    image: linuxserver/bazarr
+    container_name: bazarr
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Australia/Sydney
+    volumes:
+      - ./bazarr/config:/config
+      - ./sonarr/tv:/tv
+      - ./radarr/movies:/movies
+    restart: unless-stopped
+
+  jellyfin:
+    image: linuxserver/jellyfin
+    container_name: jellyfin
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Australia/Sydney
+    volumes:
+      - ./jellyfin/config:/config
+      - ./jellyfin/cache:/cache
+      - ./sonarr/tv:/tv
+      - ./radarr/movies:/movies
+      - ./lidarr/music:/music
+    restart: unless-stopped
+
+  plex:
+    image: linuxserver/plex
+    container_name: plex
+    network_mode: "service:gluetun"
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Australia/Sydney
+      - VERSION=docker
+    volumes:
+      - ./plex/config:/config
+      - ./sonarr/tv:/tv
+      - ./radarr/movies:/movies
+      - ./lidarr/music:/music
+    restart: unless-stopped

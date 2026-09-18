@@ -1,0 +1,93 @@
+
+✅ ByteEdge Media Stack - Final Working Setup Summary
+
+🖥️ Host: Synology NAS
+📂 Media Stack Base Path: /volume1/mediastack
+👤 Docker User: mediastack (uid=1027, gid=100)
+🛡️ VPN Layer: Gluetun with NordVPN
+
+─────────────────────────────────────────────
+1. Docker Compose Services and URLs
+
+• Gluetun (VPN) — base tunnel layer
+• qBittorrent       http://<your-nas-ip>:8080/
+• Sonarr            http://<your-nas-ip>:8989/
+• Radarr            http://<your-nas-ip>:7878/
+• Prowlarr          http://<your-nas-ip>:9696/
+• Bazarr            http://<your-nas-ip>:6767/
+• Jellyfin          http://<your-nas-ip>:8096/ *(outside Gluetun)*
+
+─────────────────────────────────────────────
+2. How to Find PUID and PGID
+
+SSH into your NAS and run:
+    id mediastack
+
+Example output:
+    uid=1027(mediastack) gid=100(users) groups=100(users),65536(mediagroup)
+
+Use:
+    PUID=1027
+    PGID=100
+
+─────────────────────────────────────────────
+3. Permissions Setup (run via SSH)
+
+sudo -i
+
+chown -R 1027:100 /volume1/mediastack
+chmod -R 775 /volume1/mediastack
+
+─────────────────────────────────────────────
+4. DSM Folder Permissions (via GUI)
+
+DSM → Control Panel → Shared Folder → mediastack → Edit → Permissions
+
+✔ User: mediastack → Read/Write  
+✔ Group: mediagroup → Read/Write
+
+─────────────────────────────────────────────
+5. Docker Compose Environment Variables
+
+In each container:
+    - PUID=1027
+    - PGID=100
+    - TZ=Australia/Sydney
+
+─────────────────────────────────────────────
+6. Fix for Gluetun VPN TUN Error
+
+DSM → Control Panel → Terminal → Enable SSH
+
+SSH into NAS using your admin user:
+    ssh youradminuser@192.168.xxx.xxx
+
+Create TUN device (run as root):
+    mkdir -p /dev/net
+    mknod /dev/net/tun c 10 200
+    chmod 600 /dev/net/tun
+
+To make it permanent:
+DSM → Control Panel → Task Scheduler → Triggered Task → Boot-up  
+Run as root:
+    mkdir -p /dev/net && mknod /dev/net/tun c 10 200 && chmod 600 /dev/net/tun
+
+─────────────────────────────────────────────
+7. Restart Stack (any time after update)
+
+cd to project folder:
+
+    docker compose down  
+    docker compose up -d
+
+Or restart individual containers:
+    docker restart gluetun sonarr radarr bazarr prowlarr qbittorrent jellyfin
+
+─────────────────────────────────────────────
+✅ Status: All services run as user `mediastack` with proper access
+
+📍 Troubleshooting Tip:
+If any service shows "AppFolder /config is not writable" → check:
+    - PUID/PGID values
+    - Folder ownership (chown)
+    - DSM folder permissions

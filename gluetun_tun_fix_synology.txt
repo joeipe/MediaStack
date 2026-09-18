@@ -45,8 +45,7 @@ STEP 4 (Optional): Make it Persistent After Reboot
 3. Set user to: root
 4. Add the following command:
 
-sudo mkdir -p /dev/net && sudo mknod /dev/net/tun c 10 200 && sudo chmod 600 /dev/net/tun
-
+mkdir -p /dev/net && mknod /dev/net/tun c 10 200 && chmod 600 /dev/net/tun
 
 ✅ This re-creates /dev/net/tun at every boot.
 
